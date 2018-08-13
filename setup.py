@@ -6,6 +6,11 @@ setup(
     author="Tristan Struthers",
     description="An emoji painter",
     url="https://github.com/trstruth/shigo",
+    install_requires=[
+        "numpy",
+        "scipy",
+        "pillow"
+    ],
     test_suite="nose_collector",
-    tests_require=['nose']
+    tests_require=["nose"]
     )

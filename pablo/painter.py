@@ -1,15 +1,25 @@
+import os
+import numpy as np
+from scipy import ndimage
+
 class Painter(object):
 
-    def __init__(self, num_iters=10000, num_emojis=1000):
+    def __init__(self,
+                 num_iters=10000,
+                 num_emojis=1000,
+                 images_directory=os.path.abspath(os.path.join(__file__,"../../","images/"))):
+
         self.target_image = None
         self.generated_image = None
         self.num_iters = num_iters
         self.num_emojis = num_emojis
+        self.images_directory = images_directory
         self.error = float("inf")
 
-    def load_target_image(self, filepath):
+    def load_target_image_from_file(self, filename):
         # TODO: method to load the target image from a given filepath
-        raise NotImplementedError
+        target_image_filepath = os.path.join(self.images_directory, filename)
+        self.target_image = ndimage.imread(target_image_filepath)
 
     def init_generated_image(self):
         # TODO: initialize generated image with randomly placed emojis
@@ -35,9 +45,9 @@ class Painter(object):
         self.take_action(chosen_action)
         self.calculate_error()
 
-    def create_image(self, filepath):
+    def create_image(self, filename):
         # TODO: step self.num_iters times and generate image
-        self.load_target_image(filepath)
+        self.load_target_image_from_file(filename)
         self.init_generated_image()
 
         for _ in range(self.num_iters):

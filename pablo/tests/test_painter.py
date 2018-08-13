@@ -13,9 +13,9 @@ class MyFirstTests(unittest.TestCase):
         p.init_generated_image()
         self.assertIsNotNone(p.generated_image)
 
-    def test_load_target_image(self):
+    def test_load_target_image_from_file(self):
         p = pablo.Painter()
-        p.load_target_image('sample_filename.jpg')
+        p.load_target_image_from_file('pablo.jpg')
         self.assertIsNotNone(p.target_image)
 
     def test_calculate_error_identity(self):
