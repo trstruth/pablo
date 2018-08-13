@@ -7,7 +7,7 @@ class Painter(object):
         self.num_emojis = num_emojis
         self.error = float("inf")
 
-    def load_target_image(self, filepath=None):
+    def load_target_image(self, filepath):
         # TODO: method to load the target image from a given filepath
         raise NotImplementedError
 
@@ -35,7 +35,7 @@ class Painter(object):
         self.take_action(chosen_action)
         self.calculate_error()
 
-    def create_image(self, filepath=None):
+    def create_image(self, filepath):
         # TODO: step self.num_iters times and generate image
         self.load_target_image(filepath)
         self.init_generated_image()
