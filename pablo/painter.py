@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from scipy import ndimage
+import imageio
 
 class Painter(object):
 
@@ -17,12 +17,11 @@ class Painter(object):
         self.error = float("inf")
 
     def load_target_image_from_file(self, filename):
-        # TODO: method to load the target image from a given filepath
         target_image_filepath = os.path.join(self.images_directory, filename)
-        self.target_image = ndimage.imread(target_image_filepath)
+        self.target_image = imageio.imread(target_image_filepath)
 
     def init_generated_image(self):
-        # TODO: initialize generated image with randomly placed emojis
+        assert self.target_image.shape is not None
         raise NotImplementedError
 
     def calculate_error(self):

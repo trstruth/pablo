@@ -7,8 +7,8 @@ setup(
     description="An emoji painter",
     url="https://github.com/trstruth/shigo",
     install_requires=[
-        "numpy==1.13.3",
-        "scipy",
+        "numpy",
+        "imageio",
         "pillow"
     ],
     test_suite="nose_collector",
