@@ -1,9 +1,11 @@
 import unittest
-from mycode import *
+import pablo
 
 class MyFirstTests(unittest.TestCase):
+
     def test_hello(self):
-        self.assertEqual(hello_world(), 'hello world')
+        p = pablo.Painter()
+        self.assertEqual(p.hello_world(), 'hello world')
 
 if __name__ == '__main__':
     unittest.main()

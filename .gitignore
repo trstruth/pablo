@@ -6,3 +6,4 @@
 
 # Python egg metdata
 /*.egg-info
+/.eggs/
