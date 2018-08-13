@@ -1,0 +1,8 @@
+# Compiled python modules
+*.pyc
+
+# Setuptools dist folder
+/dist/
+
+# Python egg metdata
+/*.egg-info
