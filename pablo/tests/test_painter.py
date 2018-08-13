@@ -1,5 +1,6 @@
 import unittest
 import pablo
+import numpy as np
 
 class MyFirstTests(unittest.TestCase):
 
@@ -10,6 +11,7 @@ class MyFirstTests(unittest.TestCase):
 
     def test_init_generated_image(self):
         p = pablo.Painter()
+        p.load_target_image_from_file('pablo.jpg')
         p.init_generated_image()
         self.assertIsNotNone(p.generated_image)
 
@@ -20,13 +22,17 @@ class MyFirstTests(unittest.TestCase):
 
     def test_calculate_error_identity(self):
         p = pablo.Painter()
-        image1 = 1
-        image2 = 1
-
-        p.target_image = image1
-        p.generated_image = image2
+        p.target_image = np.zeros([300, 300, 0], dtype=int)
+        p.generated_image = np.zeros([300, 300, 0], dtype=int)
 
         self.assertEqual(p.calculate_error(), 0)
+
+    def test_calculate_error_nonnegative(self):
+        p = pablo.Painter()
+        p.target_image = np.empty([300, 300, 0], dtype=int)
+        p.generated_image = np.empty([300, 300, 0], dtype=int)
+
+        self.assertGreaterEqual(p.calculate_error(), 0)
 
 if __name__ == '__main__':
     unittest.main()

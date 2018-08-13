@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from numpy import linalg as LA
 import imageio
 
 class Painter(object):
@@ -22,11 +23,12 @@ class Painter(object):
 
     def init_generated_image(self):
         assert self.target_image.shape is not None
-        raise NotImplementedError
+        self.generated_image = np.zeros(self.target_image.shape, dtype=int)
+        # TODO: add randomly selected emojis
 
     def calculate_error(self):
-        # TODO: calculate error between self.target_image and self.generated_image.  Could be simple pixel diff or more sophisticated method
-        raise NotImplementedError 
+        assert self.target_image.shape == self.generated_image.shape
+        return LA.norm(self.target_image - self.generated_image)
 
     def choose_action(self):
         # TODO: implement logic for selecting an action or "iterating" on the image
@@ -42,7 +44,7 @@ class Painter(object):
         # TODO: implement one iteration: choose action, take action, recalculate error
         chosen_action = self.choose_action()
         self.take_action(chosen_action)
-        self.calculate_error()
+        self.error = self.calculate_error()
 
     def create_image(self, filename):
         # TODO: step self.num_iters times and generate image
