@@ -2,7 +2,7 @@ import unittest
 import pablo
 import numpy as np
 
-class MyFirstTests(unittest.TestCase):
+class PainterTests(unittest.TestCase):
 
     def test_init_painter(self):
         p = pablo.Painter()
