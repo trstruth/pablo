@@ -19,11 +19,15 @@ class Painter(object):
 
     def load_target_image_from_file(self, filename):
         target_image_filepath = os.path.join(self.images_directory, filename)
-        self.target_image = imageio.imread(target_image_filepath)
+        self.target_image = imageio.imread(target_image_filepath, format='JPEG-FI')
+
+    def write_generated_image_to_file(self, filename):
+        generated_image_filepath = os.path.join(self.images_directory, filename)
+        self.target_image = imageio.imwrite(generated_image_filepath, self.generated_image, format='JPEG-FI')
 
     def init_generated_image(self):
-        assert self.target_image.shape is not None
-        self.generated_image = np.zeros(self.target_image.shape, dtype=int)
+        assert self.target_image is not None
+        self.generated_image = np.empty_like(self.target_image)
         # TODO: add randomly selected emojis
 
     def calculate_error(self):
@@ -51,5 +55,12 @@ class Painter(object):
         self.load_target_image_from_file(filename)
         self.init_generated_image()
 
+        '''
         for _ in range(self.num_iters):
             self.step()
+        '''
+
+        output_filename = filename.split('.')
+        output_filename[0] = output_filename[0] + '_out'
+        output_filename = '.'.join(output_filename)
+        self.write_generated_image_to_file(output_filename)
