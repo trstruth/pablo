@@ -7,3 +7,6 @@
 # Python egg metdata
 /*.egg-info
 /.eggs/
+
+# Output images
+/images/*_out.jpg
