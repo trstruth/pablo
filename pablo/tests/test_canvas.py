@@ -6,13 +6,13 @@ class CanvasTests(unittest.TestCase):
 
     def test_init_generated_image(self):
         c = pablo.Canvas()
-        c.load_target_image_from_file('pablo.jpg')
+        c.load_target_image_from_file('pablo.png')
         c.init_generated_image()
         self.assertIsNotNone(c.generated_image)
 
     def test_load_target_image_from_file(self):
         c = pablo.Canvas()
-        c.load_target_image_from_file('pablo.jpg')
+        c.load_target_image_from_file('pablo.png')
         self.assertIsNotNone(c.target_image)
 
     def test_calculate_error_identity(self):

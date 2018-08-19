@@ -31,7 +31,7 @@ class Canvas(object):
             None
         """
         target_image_filepath = os.path.join(self.images_directory, filename)
-        self.target_image = imageio.imread(target_image_filepath, format='JPEG-FI')
+        self.target_image = imageio.imread(target_image_filepath, format='PNG-FI')
 
     def write_generated_image_to_file(self, filename):
         """Write self.generated_image to <filename>
@@ -43,7 +43,7 @@ class Canvas(object):
             None
         """
         generated_image_filepath = os.path.join(self.images_directory, filename)
-        self.target_image = imageio.imwrite(generated_image_filepath, self.generated_image, format='JPEG-FI')
+        self.target_image = imageio.imwrite(generated_image_filepath, self.generated_image, format='PNG-FI')
 
     def init_generated_image(self):
         """Initialize the generated image in a random manner
