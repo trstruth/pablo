@@ -9,4 +9,4 @@
 /.eggs/
 
 # Output images
-/images/*_out.jpg
+/images/*_out.png
