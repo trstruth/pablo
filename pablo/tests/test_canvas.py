@@ -4,31 +4,30 @@ import numpy as np
 
 class CanvasTests(unittest.TestCase):
 
+    def setUp(self):
+        self.c = pablo.Canvas('pablo.png')
+
     def test_init(self):
-        c = pablo.Canvas('pablo.png')
-        self.assertIsNotNone(c.target_image)
-        self.assertIsNotNone(c.generated_image)
+        self.assertIsNotNone(self.c.target_image)
+        self.assertIsNotNone(self.c.generated_image)
 
     def test_calculate_error_identity(self):
-        c = pablo.Canvas('pablo.png')
-        c.target_image = np.zeros([300, 300, 0], dtype=int)
-        c.generated_image = np.zeros([300, 300, 0], dtype=int)
+        self.c.target_image = np.zeros([300, 300, 0], dtype=int)
+        self.c.generated_image = np.zeros([300, 300, 0], dtype=int)
 
-        self.assertEqual(c._calculate_error(), 0)
+        self.assertEqual(self.c._calculate_error(), 0)
 
     def test_calculate_error_nonnegative(self):
-        c = pablo.Canvas('pablo.png')
-        c.target_image = np.empty([300, 300, 0], dtype=int)
-        c.generated_image = np.empty([300, 300, 0], dtype=int)
+        self.c.target_image = np.empty([300, 300, 0], dtype=int)
+        self.c.generated_image = np.empty([300, 300, 0], dtype=int)
 
-        self.assertEqual(c._calculate_error(), 0)
+        self.assertEqual(self.c._calculate_error(), 0)
 
     def test_gym_reset(self):
-        c = pablo.Canvas('pablo.png')
-        initial_observation = c.reset()
+        initial_observation = self.c.reset()
 
-        self.assertIsNotNone(c.generated_image)
-        self.assertEqual(c.generated_image.shape, c.target_image.shape)
+        self.assertIsNotNone(self.c.generated_image)
+        self.assertEqual(self.c.generated_image.shape, self.c.target_image.shape)
         self.assertIsNotNone(initial_observation)
 
     def test_gym_step(self):
