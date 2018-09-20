@@ -14,14 +14,14 @@ class CanvasTests(unittest.TestCase):
         c.target_image = np.zeros([300, 300, 0], dtype=int)
         c.generated_image = np.zeros([300, 300, 0], dtype=int)
 
-        self.assertEqual(c.calculate_error(), 0)
+        self.assertEqual(c._calculate_error(), 0)
 
     def test_calculate_error_nonnegative(self):
         c = pablo.Canvas('pablo.png')
         c.target_image = np.empty([300, 300, 0], dtype=int)
         c.generated_image = np.empty([300, 300, 0], dtype=int)
 
-        self.assertEqual(c.calculate_error(), 0)
+        self.assertEqual(c._calculate_error(), 0)
 
     def test_gym_reset(self):
         c = pablo.Canvas('pablo.png')
