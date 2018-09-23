@@ -9,7 +9,8 @@ setup(
     install_requires=[
         "numpy",
         "imageio",
-        "pillow"
+        "pillow",
+        "gym",
     ],
     test_suite="nose_collector",
     tests_require=["nose"]
