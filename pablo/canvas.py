@@ -1,3 +1,5 @@
+# coding: utf-8
+
 """A module for the Canvas where the image where be created
 
 analogous to the environment in a reinforcement learning problem - accepts actions,
@@ -11,6 +13,7 @@ import imageio
 import os
 import gym
 
+from gym import spaces, logger
 from numpy import linalg as LA
 
 class Canvas(gym.Env):
@@ -22,10 +25,19 @@ class Canvas(gym.Env):
         self.target_image_filename = target_image_filename
         self.generated_image = None
         self.images_directory = images_directory
+        self.emoji_directory = os.path.join(self.images_directory, 'emojis')
+        self.num_emojis = len(os.listdir(self.emoji_directory))
         self.error = float("inf")
 
         self._load_target_image_from_file(self.target_image_filename)
         self._init_generated_image()
+        self.target_image_h, self.target_image_w, _ = self.target_image.shape
+
+        self.action_space = spaces.Dict({
+            "y": spaces.Discrete(self.target_image_h),
+            "x": spaces.Discrete(self.target_image_w),
+            "emoji_selection": spaces.Discrete(self.num_emojis)
+        })
 
     def reset(self):
         """Resets the state of the canvas by:
@@ -38,6 +50,24 @@ class Canvas(gym.Env):
         """
         self._init_generated_image()
         return self.generated_image
+
+    def step(self):
+        """
+        step returns four values. These are:
+
+            * observation (object): an environment-specific object representing your observation of the environment. For 
+              example, pixel data from a camera, joint angles and joint velocities of a robot, or the board state in a board
+              game.
+            * reward (float): amount of reward achieved by the previous action. The scale varies between environments, but
+              the goal is always to increase your total reward.
+            * done (boolean): whether it’s time to reset the environment again. Most (but not all) tasks are divided up into 
+              well-defined episodes, and done being True indicates the episode has terminated. (For example, perhaps the pole
+              tipped too far, or you lost your last life.)
+            * info (dict): diagnostic information useful for debugging. It can sometimes be useful for learning (for example,
+              it might contain the raw probabilities behind the environment’s last state change). However, official evaluations
+              of your agent are not allowed to use this for learning.
+        """
+        pass
 
 
     def _load_target_image_from_file(self, filename):
@@ -75,8 +105,7 @@ class Canvas(gym.Env):
             None
         """
         assert self.target_image is not None
-        self.generated_image = np.empty_like(self.target_image)
-        # TODO: add randomly selected emojis
+        self.generated_image = np.full(self.target_image.shape, 255, dtype=np.uint8)
 
     def _calculate_error(self):
         """ Calculate the error between self.target_image and self.generated_image
