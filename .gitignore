@@ -9,4 +9,6 @@
 /.eggs/
 
 # Output images
-/images/*_out.png
+/images/*out.png
+
+.DS_Store
