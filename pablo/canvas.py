@@ -9,14 +9,19 @@ and returning a reward scalar
 
 import numpy as np
 
-import imageio
 import os
 import gym
 
+from PIL import Image
 from gym import spaces, logger
 from numpy import linalg as LA
 
 class Canvas(gym.Env):
+        
+    metadata = {
+        'render.modes': ['human', 'rgb_array'],
+        'video.frames_per_second' : 50
+    }
 
     def __init__(self,
                  target_image_filename,
@@ -30,14 +35,16 @@ class Canvas(gym.Env):
         self.error = float("inf")
 
         self._load_target_image_from_file(self.target_image_filename)
-        self._init_generated_image()
-        self.target_image_h, self.target_image_w, _ = self.target_image.shape
+        self.reset()
+        self.target_image_w, self.target_image_h = self.target_image.size
 
         self.action_space = spaces.Dict({
             "y": spaces.Discrete(self.target_image_h),
             "x": spaces.Discrete(self.target_image_w),
-            "emoji_selection": spaces.Discrete(self.num_emojis)
+            "emoji": spaces.Discrete(self.num_emojis)
         })
+
+        self.viewer = None
 
     def reset(self):
         """Resets the state of the canvas by:
@@ -48,10 +55,12 @@ class Canvas(gym.Env):
             generated image, a numpy array who's shape matches
             that of self.target_image
         """
-        self._init_generated_image()
+        assert self.target_image is not None
+        self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
         return self.generated_image
 
-    def step(self):
+
+    def step(self, action):
         """
         step returns four values. These are:
 
@@ -67,7 +76,31 @@ class Canvas(gym.Env):
               it might contain the raw probabilities behind the environment’s last state change). However, official evaluations
               of your agent are not allowed to use this for learning.
         """
-        pass
+        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+
+        observation, reward, done, info = None, 0, False, {}
+
+        selected_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, action['emoji']))
+        coordinate = (action['x'], action['y'])
+        self.generated_image.paste(selected_emoji, coordinate, selected_emoji)
+        
+        return np.array(self.generated_image), reward, done, info
+
+    
+    def render(self, mode='human', close=False):
+
+        if close:
+            if self.viewer is not None:
+                self.viewer.close()
+                self.viewer = None
+            return
+
+        if self.viewer is None:
+            from gym.envs.classic_control import rendering
+            self.viewer = rendering.SimpleImageViewer()
+        self.viewer.imshow(np.array(self.generated_image.convert('RGB')))
+        return self.viewer.isopen
+
 
 
     def _load_target_image_from_file(self, filename):
@@ -82,9 +115,10 @@ class Canvas(gym.Env):
         """
         target_image_filepath = os.path.join(self.images_directory, filename)
         try:
-            self.target_image = imageio.imread(target_image_filepath, format='PNG-FI')
+            self.target_image = Image.open(target_image_filepath)
         except IOError:
             print('There was an error opening the file {}'.format(target_image_filepath))
+
 
     def _write_generated_image_to_file(self, filename):
         """Write self.generated_image to <filename>
@@ -96,16 +130,8 @@ class Canvas(gym.Env):
             None
         """
         generated_image_filepath = os.path.join(self.images_directory, filename)
-        self.target_image = imageio.imwrite(generated_image_filepath, self.generated_image, format='PNG-FI')
+        self.generated_image.save(generated_image_filepath)
 
-    def _init_generated_image(self):
-        """Initialize the generated image in a random manner
-
-        Returns:
-            None
-        """
-        assert self.target_image is not None
-        self.generated_image = np.full(self.target_image.shape, 255, dtype=np.uint8)
 
     def _calculate_error(self):
         """ Calculate the error between self.target_image and self.generated_image
@@ -113,5 +139,6 @@ class Canvas(gym.Env):
         Returns:
             Int: the error scalar
         """
-        assert self.target_image.shape == self.generated_image.shape
+        assert self.target_image.size == self.generated_image.size
         return LA.norm(self.target_image - self.generated_image)
+

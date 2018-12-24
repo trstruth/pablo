@@ -27,7 +27,7 @@ class CanvasTests(unittest.TestCase):
         initial_observation = self.c.reset()
 
         self.assertIsNotNone(self.c.generated_image)
-        self.assertEqual(self.c.generated_image.shape, self.c.target_image.shape)
+        self.assertEqual(self.c.generated_image.size, self.c.target_image.size)
         self.assertIsNotNone(initial_observation)
 
     def test_gym_step(self):
