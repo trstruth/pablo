@@ -1,13 +1,16 @@
-import numpy as np
-import pablo 
-import time
-
-c = pablo.Canvas('pablo.png')
-c.reset()
-
-for _ in range(100):
-    c.step(c.action_space.sample())
-    c.render()
-
-time.sleep(3)
-c._write_generated_image_to_file('pablo-out.png')
+import pablo
+env = pablo.Canvas('pablo.png')
+for i_episode in range(20):
+    observation = env.reset()
+    info = {}
+    for t in range(500):
+        print info
+        env.render()
+        action = env.action_space.sample()
+        try:
+            observation, reward, done, info = env.step(action)
+        except ValueError:
+            print action
+        if done:
+            print("Episode finished after {} timesteps".format(t+1))
+            break
