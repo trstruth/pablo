@@ -9,10 +9,10 @@ and returning a reward scalar
 
 import numpy as np
 
-import imageio
 import os
 import gym
 
+from PIL import Image
 from gym import spaces, logger
 from numpy import linalg as LA
 
@@ -31,7 +31,7 @@ class Canvas(gym.Env):
 
         self._load_target_image_from_file(self.target_image_filename)
         self._init_generated_image()
-        self.target_image_h, self.target_image_w, _ = self.target_image.shape
+        self.target_image_w, self.target_image_h = self.target_image.size
 
         self.action_space = spaces.Dict({
             "y": spaces.Discrete(self.target_image_h),
@@ -82,9 +82,10 @@ class Canvas(gym.Env):
         """
         target_image_filepath = os.path.join(self.images_directory, filename)
         try:
-            self.target_image = imageio.imread(target_image_filepath, format='PNG-FI')
+            self.target_image = Image.open(target_image_filepath)
         except IOError:
             print('There was an error opening the file {}'.format(target_image_filepath))
+
 
     def _write_generated_image_to_file(self, filename):
         """Write self.generated_image to <filename>
@@ -96,7 +97,8 @@ class Canvas(gym.Env):
             None
         """
         generated_image_filepath = os.path.join(self.images_directory, filename)
-        self.target_image = imageio.imwrite(generated_image_filepath, self.generated_image, format='PNG-FI')
+        self.generated_image.save(generated_image_filepath)
+        
 
     def _init_generated_image(self):
         """Initialize the generated image in a random manner
@@ -105,7 +107,8 @@ class Canvas(gym.Env):
             None
         """
         assert self.target_image is not None
-        self.generated_image = np.full(self.target_image.shape, 255, dtype=np.uint8)
+        self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
+
 
     def _calculate_error(self):
         """ Calculate the error between self.target_image and self.generated_image
@@ -113,5 +116,6 @@ class Canvas(gym.Env):
         Returns:
             Int: the error scalar
         """
-        assert self.target_image.shape == self.generated_image.shape
+        assert self.target_image.size == self.generated_image.size
         return LA.norm(self.target_image - self.generated_image)
+
