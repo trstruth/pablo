@@ -62,8 +62,12 @@ class Canvas(gym.Env):
         self.observation_space
         """
         assert self.target_image is not None
+        self.emoji_count = 0
         self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
-        return {'target': self.target_image.convert('RGB'), 'generated': self.generated_image.convert('RGB')}
+        return {
+            'target': np.array(self.target_image.convert('RGB')),
+            'generated': np.array(self.generated_image.convert('RGB'))
+        }
 
 
     def step(self, action):
@@ -90,7 +94,10 @@ class Canvas(gym.Env):
         self.generated_image.paste(selected_emoji, coordinate, selected_emoji)
 
         # construct the observation object
-        observation = {'target': self.target_image.convert('RGB'), 'generated': self.generated_image.convert('RGB')}
+        observation = {
+            'target': np.array(self.target_image.convert('RGB')),
+            'generated': np.array(self.generated_image.convert('RGB'))
+        }
 
         # TODO: calculate reward
         reward = 0
@@ -100,7 +107,11 @@ class Canvas(gym.Env):
         done = (self.emoji_count >= self.max_emojis)
 
         # construct diagnoistic info dict
-        info = {}
+        info = {
+            'selected_emoji': action['emoji'],
+            'position': (action['x'], action['y']),
+            'emoji_count': self.emoji_count
+        }
         
         return observation, reward, done, info
     
