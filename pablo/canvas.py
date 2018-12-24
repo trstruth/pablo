@@ -31,7 +31,7 @@ class Canvas(gym.Env):
         self.generated_image = None
         self.images_directory = images_directory
         self.emoji_directory = os.path.join(self.images_directory, 'emojis')
-        self.num_available_emojis = len(os.listdir(self.emoji_directory))
+        self.num_available_emojis = len(os.listdir(self.emoji_directory)) - 1
         self.emoji_count = 0
         self.max_emojis = 300
         self.error = float('inf')
@@ -44,7 +44,9 @@ class Canvas(gym.Env):
         self.action_space = spaces.Dict({
             'y': spaces.Discrete(self.target_image_h),
             'x': spaces.Discrete(self.target_image_w),
-            'emoji': spaces.Discrete(self.num_available_emojis)
+            'emoji': spaces.Discrete(self.num_available_emojis),
+            'scale': spaces.Box(low=1, high=5, shape=(1,), dtype=np.float32),
+            'rotation': spaces.Discrete(360)
         })
 
         self.observation_space = spaces.Dict({
@@ -91,6 +93,12 @@ class Canvas(gym.Env):
         # Place emoji as described by the action
         selected_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, action['emoji']))
         coordinate = (action['x'], action['y'])
+        scale = action['scale']
+        cur_size = selected_emoji.size
+        scaled_size = (cur_size[0] / scale, cur_size[1] / scale)
+        selected_emoji = selected_emoji.resize(scaled_size)
+        selected_emoji = selected_emoji.rotate(action['rotation'], expand=1)
+
         self.generated_image.paste(selected_emoji, coordinate, selected_emoji)
 
         # construct the observation object
