@@ -11,6 +11,7 @@ setup(
         "imageio",
         "pillow",
         "gym",
+        "scikit-image",
     ],
     test_suite="nose_collector",
     tests_require=["nose"]
