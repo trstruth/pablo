@@ -36,7 +36,7 @@ class Canvas(gym.Env):
         self.action_space = spaces.Dict({
             "y": spaces.Discrete(self.target_image_h),
             "x": spaces.Discrete(self.target_image_w),
-            "emoji_selection": spaces.Discrete(self.num_emojis)
+            "emoji": spaces.Discrete(self.num_emojis)
         })
 
     def reset(self):
@@ -53,7 +53,7 @@ class Canvas(gym.Env):
         return self.generated_image
 
 
-    def step(self):
+    def step(self, action):
         """
         step returns four values. These are:
 
@@ -69,7 +69,15 @@ class Canvas(gym.Env):
               it might contain the raw probabilities behind the environment’s last state change). However, official evaluations
               of your agent are not allowed to use this for learning.
         """
-        pass
+        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+
+        observation, reward, done, info = None, 0, False, {}
+
+        selected_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, action['emoji']))
+        coordinate = (action['x'], action['y'])
+        self.generated_image.paste(selected_emoji, coordinate)
+        
+        return np.array(self.generated_image), reward, done, info
 
 
     def _load_target_image_from_file(self, filename):
