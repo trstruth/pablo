@@ -12,3 +12,6 @@
 /images/*out.png
 
 .DS_Store
+
+# .swp files
+.*.swp
