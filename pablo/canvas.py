@@ -19,45 +19,57 @@ from numpy import linalg as LA
 class Canvas(gym.Env):
         
     metadata = {
-        'render.modes': ['human', 'rgb_array'],
+        'render.modes': ['human'],
         'video.frames_per_second' : 50
     }
 
     def __init__(self,
                  target_image_filename,
-                 images_directory=os.path.abspath(os.path.join(__file__,"../../","images/"))):
+                 images_directory=os.path.abspath(os.path.join(__file__,'../../','images/'))):
 
         self.target_image_filename = target_image_filename
         self.generated_image = None
         self.images_directory = images_directory
         self.emoji_directory = os.path.join(self.images_directory, 'emojis')
-        self.num_emojis = len(os.listdir(self.emoji_directory))
-        self.error = float("inf")
+        self.num_available_emojis = len(os.listdir(self.emoji_directory)) - 1
+        self.emoji_count = 0
+        self.max_emojis = 300
+        self.error = float('inf')
 
+        self.viewer = None
         self._load_target_image_from_file(self.target_image_filename)
         self.reset()
         self.target_image_w, self.target_image_h = self.target_image.size
 
         self.action_space = spaces.Dict({
-            "y": spaces.Discrete(self.target_image_h),
-            "x": spaces.Discrete(self.target_image_w),
-            "emoji": spaces.Discrete(self.num_emojis)
+            'y': spaces.Discrete(self.target_image_h),
+            'x': spaces.Discrete(self.target_image_w),
+            'emoji': spaces.Discrete(self.num_available_emojis),
+            'scale': spaces.Box(low=1, high=5, shape=(1,), dtype=np.float32),
+            'rotation': spaces.Discrete(360)
         })
 
-        self.viewer = None
+        self.observation_space = spaces.Dict({
+            'target': spaces.Box(0, 255, shape=(self.target_image_h, self.target_image_w, 3), dtype=np.uint8),
+            'generated': spaces.Box(0, 255, shape=(self.target_image_h, self.target_image_w, 3), dtype=np.uint8)
+        })
+
 
     def reset(self):
         """Resets the state of the canvas by:
           - reinitializing the generated image
           - returning the inital observation
 
-        Returns: observation (object): the initialized
-            generated image, a numpy array who's shape matches
-            that of self.target_image
+        Returns: observation (object): The observation object that is described by
+        self.observation_space
         """
         assert self.target_image is not None
+        self.emoji_count = 0
         self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
-        return self.generated_image
+        return {
+            'target': np.array(self.target_image.convert('RGB')),
+            'generated': np.array(self.generated_image.convert('RGB'))
+        }
 
 
     def step(self, action):
@@ -78,17 +90,41 @@ class Canvas(gym.Env):
         """
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
 
-        observation, reward, done, info = None, 0, False, {}
-
+        # Place emoji as described by the action
         selected_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, action['emoji']))
         coordinate = (action['x'], action['y'])
+        scale = action['scale']
+        cur_size = selected_emoji.size
+        scaled_size = (cur_size[0] / scale, cur_size[1] / scale)
+        selected_emoji = selected_emoji.resize(scaled_size)
+        selected_emoji = selected_emoji.rotate(action['rotation'], expand=1)
+
         self.generated_image.paste(selected_emoji, coordinate, selected_emoji)
+
+        # construct the observation object
+        observation = {
+            'target': np.array(self.target_image.convert('RGB')),
+            'generated': np.array(self.generated_image.convert('RGB'))
+        }
+
+        # TODO: calculate reward
+        reward = 0
+
+        # increment emoji count and set done flag
+        self.emoji_count += 1
+        done = (self.emoji_count >= self.max_emojis)
+
+        # construct diagnoistic info dict
+        info = {
+            'selected_emoji': action['emoji'],
+            'position': (action['x'], action['y']),
+            'emoji_count': self.emoji_count
+        }
         
-        return np.array(self.generated_image), reward, done, info
-
+        return observation, reward, done, info
     
-    def render(self, mode='human', close=False):
 
+    def render(self, mode='human', close=False):
         if close:
             if self.viewer is not None:
                 self.viewer.close()
@@ -100,7 +136,6 @@ class Canvas(gym.Env):
             self.viewer = rendering.SimpleImageViewer()
         self.viewer.imshow(np.array(self.generated_image.convert('RGB')))
         return self.viewer.isopen
-
 
 
     def _load_target_image_from_file(self, filename):
