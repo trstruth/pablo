@@ -15,6 +15,7 @@ import gym
 from PIL import Image
 from gym import spaces, logger
 from numpy import linalg as LA
+from skimage.measure import compare_ssim
 
 class Canvas(gym.Env):
         
@@ -34,7 +35,8 @@ class Canvas(gym.Env):
         self.num_available_emojis = len(os.listdir(self.emoji_directory)) - 1
         self.emoji_count = 0
         self.max_emojis = 300
-        self.error = float('inf')
+        self.similarity = None
+        self.similarity_threshold = 0.1
 
         self.viewer = None
         self._load_target_image_from_file(self.target_image_filename)
@@ -66,6 +68,7 @@ class Canvas(gym.Env):
         assert self.target_image is not None
         self.emoji_count = 0
         self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
+        self.similarity = self._calculate_mssim()
         return {
             'target': np.array(self.target_image.convert('RGB')),
             'generated': np.array(self.generated_image.convert('RGB'))
@@ -108,17 +111,20 @@ class Canvas(gym.Env):
         }
 
         # TODO: calculate reward
-        reward = 0
+        new_similarity = self._calculate_mssim()
+        reward = new_similarity - self.similarity
+        self.similarity = new_similarity
 
         # increment emoji count and set done flag
         self.emoji_count += 1
-        done = (self.emoji_count >= self.max_emojis)
+        done = (self.emoji_count >= self.max_emojis) or (self.similarity < self.similarity_threshold)
 
         # construct diagnoistic info dict
         info = {
             'selected_emoji': action['emoji'],
             'position': (action['x'], action['y']),
-            'emoji_count': self.emoji_count
+            'emoji_count': self.emoji_count,
+            'mssim': self.similarity,
         }
         
         return observation, reward, done, info
@@ -176,4 +182,21 @@ class Canvas(gym.Env):
         """
         assert self.target_image.size == self.generated_image.size
         return LA.norm(self.target_image - self.generated_image)
+
+    def _calculate_mssim(self):
+        """ Calculate the mean structural similarity between self.target_image and self.generated_image
+
+        Returns:
+            Float: The mean structural similarity over the image.
+        """
+        assert self.target_image.size == self.generated_image.size
+        thumb_size = (128, 128)
+        target_thumb = self.target_image.copy().convert('RGB') 
+        generated_thumb = self.generated_image.copy().convert('RGB') 
+        target_thumb.thumbnail(thumb_size, resample=Image.ANTIALIAS)
+        generated_thumb.thumbnail(thumb_size, resample=Image.ANTIALIAS)
+
+        return compare_ssim(np.array(target_thumb), np.array(generated_thumb), multichannel=True)
+        
+
 
