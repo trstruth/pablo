@@ -30,7 +30,7 @@ class Canvas(gym.Env):
         self.error = float("inf")
 
         self._load_target_image_from_file(self.target_image_filename)
-        self._init_generated_image()
+        self.reset()
         self.target_image_w, self.target_image_h = self.target_image.size
 
         self.action_space = spaces.Dict({
@@ -48,8 +48,10 @@ class Canvas(gym.Env):
             generated image, a numpy array who's shape matches
             that of self.target_image
         """
-        self._init_generated_image()
+        assert self.target_image is not None
+        self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
         return self.generated_image
+
 
     def step(self):
         """
@@ -98,16 +100,6 @@ class Canvas(gym.Env):
         """
         generated_image_filepath = os.path.join(self.images_directory, filename)
         self.generated_image.save(generated_image_filepath)
-        
-
-    def _init_generated_image(self):
-        """Initialize the generated image in a random manner
-
-        Returns:
-            None
-        """
-        assert self.target_image is not None
-        self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
 
 
     def _calculate_error(self):
