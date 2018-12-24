@@ -17,6 +17,11 @@ from gym import spaces, logger
 from numpy import linalg as LA
 
 class Canvas(gym.Env):
+        
+    metadata = {
+        'render.modes': ['human', 'rgb_array'],
+        'video.frames_per_second' : 50
+    }
 
     def __init__(self,
                  target_image_filename,
@@ -38,6 +43,8 @@ class Canvas(gym.Env):
             "x": spaces.Discrete(self.target_image_w),
             "emoji": spaces.Discrete(self.num_emojis)
         })
+
+        self.viewer = None
 
     def reset(self):
         """Resets the state of the canvas by:
@@ -75,9 +82,25 @@ class Canvas(gym.Env):
 
         selected_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, action['emoji']))
         coordinate = (action['x'], action['y'])
-        self.generated_image.paste(selected_emoji, coordinate)
+        self.generated_image.paste(selected_emoji, coordinate, selected_emoji)
         
         return np.array(self.generated_image), reward, done, info
+
+    
+    def render(self, mode='human', close=False):
+
+        if close:
+            if self.viewer is not None:
+                self.viewer.close()
+                self.viewer = None
+            return
+
+        if self.viewer is None:
+            from gym.envs.classic_control import rendering
+            self.viewer = rendering.SimpleImageViewer()
+        self.viewer.imshow(np.array(self.generated_image.convert('RGB')))
+        return self.viewer.isopen
+
 
 
     def _load_target_image_from_file(self, filename):
