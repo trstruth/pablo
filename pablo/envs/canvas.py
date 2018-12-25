@@ -25,8 +25,8 @@ class Canvas(gym.Env):
     }
 
     def __init__(self,
-                 target_image_filename,
-                 images_directory=os.path.abspath(os.path.join(__file__,'../../','images/'))):
+                 target_image_filename='pablo.png',
+                 images_directory=os.path.abspath(os.path.join(__file__,'../../../','images/'))):
 
         self.target_image_filename = target_image_filename
         self.generated_image = None
@@ -55,6 +55,8 @@ class Canvas(gym.Env):
             'target': spaces.Box(0, 255, shape=(self.target_image_h, self.target_image_w, 3), dtype=np.uint8),
             'generated': spaces.Box(0, 255, shape=(self.target_image_h, self.target_image_w, 3), dtype=np.uint8)
         })
+
+        self.action_space.n = len(self.action_space.spaces.items())
 
 
     def reset(self):
