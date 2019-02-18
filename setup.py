@@ -12,6 +12,7 @@ setup(
         "pillow",
         "gym",
         "scikit-image",
+        "tqdm",
     ],
     test_suite="nose_collector",
     tests_require=["nose"]

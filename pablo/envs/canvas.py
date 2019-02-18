@@ -1,6 +1,6 @@
 # coding: utf-8
 
-"""A module for the Canvas where the image where be created
+"""A module for the Canvas where the image will be created
 
 analogous to the environment in a reinforcement learning problem - accepts actions,
 performs transformations to the images stored as members, thus updating the environment
@@ -121,7 +121,7 @@ class Canvas(gym.Env):
         self.emoji_count += 1
         done = (self.emoji_count >= self.max_emojis) or (self.similarity < self.similarity_threshold)
 
-        # construct diagnoistic info dict
+        # construct diagnositic info dict
         info = {
             'selected_emoji': action['emoji'],
             'position': (action['x'], action['y']),
