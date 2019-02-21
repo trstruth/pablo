@@ -14,10 +14,11 @@ import random
 from tqdm import tqdm
 
 def sampler(image):
-    """Picks out points on image."""
+    """Picks out points on image in the middle third of the picture (to avoid sampling too much white pixels)."""
     len_x, len_y = (image.size[0], image.size[1])
     x, y = random.randint(0, len_x-1), random.randint(0, len_y-1)
     return x, y
+
 
 def getAverageRGB(image):
     """Given PIL Image, return its Average RGBA value."""
@@ -26,10 +27,10 @@ def getAverageRGB(image):
     im.shape = (w*h, d)
     return tuple(im.mean(axis=0))
 
-def getListOfRGBs(path="../images/emojis/"):
-    """Given a path towards folder with all N emojis build a long (4*N) table with the average RGBA values of each emoji."""
-    list_of_average_RGBS = np.zeros((4, 2363))
-    for i in range(2363):
+def getListOfRGBs(N=2363, path="../images/emojis/"):
+    """Given a path towards folder with all N emojis build a long (4*N) table with the RGBA values of given emoji."""
+    list_of_average_RGBS = np.zeros((4, N))
+    for i in range(N):
         new_path = path+str(i)+'.png'
         emoji = Image.open(new_path)
         average_rgb = np.array(getAverageRGB(emoji))
@@ -51,7 +52,7 @@ def findEmojiNumber(pixel_value, list_of_average_RGBs, tol = 4000, num_emojis = 
             return i
     return 0
 
-def findEmojiNumberPrecise(pixel_value, list_of_average_RGBs):
+def findEmojiNumberPrecise(pixel_value, list_of_average_RGBs, num_emojis = 2362):
     """Given a pixel value sampled from the image, and a list of the average color of different emojis, 
     find an emoji that approximates the colour of the sampled pixel.
 
@@ -77,6 +78,29 @@ def pasteEmoji(image, emoji_number, location, emoji_size = 25, path="../images/e
 
     image.paste(emoji, (location[0]-int(emoji_size/2), location[1]-int(emoji_size/2)), emoji)
 
+def getPatch(image, k):
+    """Picks out a k*k patch of the image"""
+    len_x, len_y = (image.size[0], image.size[1])
+    x, y = random.randint(0, len_x-1-k), random.randint(0, len_y-1-k)
+    return image.crop((x, y, x+k, y+k)), (x+int(k/2), y+int(k/2))
+
+def findVariance(patch):
+    """Returns the variance of a patch of image"""
+    return np.var(np.array(patch))
+
+def iterate(num_iters, k, base, image, variance_threshold, table, path="../images/emojis/"):
+    acceptance = 0
+    for i in range(num_iters):
+        patch, location = getPatch(base, k)
+        pixel = np.array(getAverageRGB(patch))
+        if findVariance(patch) < variance_threshold:
+            acceptance +=1
+            emoji_num = findEmojiNumberPrecise(pixel, table)
+            emoji = pasteEmoji(image, emoji_num, location, emoji_size=k, path=path)
+        if i % int(num_iters/4) == 0:
+            print(f'{i/num_iters *100}% of {k} iteration completed')
+    return acceptance/num_iters * 100
+
 
 def main():
     """Runs entire script
@@ -93,14 +117,9 @@ def main():
     emoji_size = 25 
     list_of_RGBs = getListOfRGBs()
 
-    for i in tqdm(range(iters)):
-        location = sampler(base)
-        pixel = base.getpixel(location)
-        pixel = pixel[0:3]
-        
-        emoji_num = findEmojiNumberPrecise(pixel, list_of_RGBs)
-        emoji = pasteEmoji(image, emoji_num, location, emoji_size=emoji_size)
-
+    acc150 = iterate(1000, 150, base, image, 10000, list_of_RGBs)
+    acc50 = iterate(10000, 50, base, image, 8000, list_of_RGBs)
+    acc25 = iterate(50000, 25, base, image, 6000, list_of_RGBs)
 
     image.save("new_"+image_name+"_"+str(iters)+".png")
     
