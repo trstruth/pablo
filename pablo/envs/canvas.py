@@ -15,6 +15,7 @@ import gym
 from PIL import Image
 from gym import spaces, logger
 from numpy import linalg as LA
+from scipy.spatial import KDTree
 from skimage.measure import compare_ssim
 
 class Canvas(gym.Env):
@@ -201,4 +202,34 @@ class Canvas(gym.Env):
         return compare_ssim(np.array(target_thumb), np.array(generated_thumb), multichannel=True)
         
 
+    def _construct_emoji_KDTree(self):
+        avg_rgb_list = np.zeros((self.num_available_emojis, 4))
+
+        for i in range(self.num_available_emojis):
+            emoji = Image.open('{}/{}.png'.format(self.emoji_directory, i))
+            average_rgb = np.array(self._get_average_rgb(emoji))
+            avg_rgb_list[i, :] = average_rgb   
+
+        return KDTree(avg_rgb_list)
+
+
+    def _get_average_rgb(self, image):
+        """Given PIL Image, return its Average RGBA value."""
+        im = np.array(image)
+        w,h,d = im.shape
+        im.shape = (w*h, d)
+        return tuple(im.mean(axis=0))
+
+
+    def _find_nearest_emoji(self, r, g, b):
+        """Find and return the emoji with average rgb values closest to supplied rgb
+        
+        Args:
+            r (int): The red component
+            g (int): The green component
+            b (int): The blue component
+
+        Returns:
+            
+        """
 
