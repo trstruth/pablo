@@ -216,9 +216,7 @@ class Canvas(gym.Env):
     def _get_average_rgb(self, image):
         """Given PIL Image, return its Average RGBA value."""
         im = np.array(image)
-        w,h,d = im.shape
-        im.shape = (w*h, d)
-        return tuple(im.mean(axis=0))
+        return tuple(im.mean(axis=(0,1)))
 
 
     def _find_nearest_emoji(self, r, g, b):
