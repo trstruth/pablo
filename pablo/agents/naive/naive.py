@@ -26,7 +26,7 @@ def getAverageRGB(image):
     im.shape = (w*h, d)
     return tuple(im.mean(axis=0))
 
-def getListOfRGBs(path="../images/emojis/"):
+def getListOfRGBs(path="../../images/emojis/"):
     """Given a path towards folder with all N emojis build a long (4*N) table with the average RGBA values of each emoji."""
     list_of_average_RGBS = np.zeros((4, 2363))
     for i in range(2363):
