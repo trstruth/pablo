@@ -49,8 +49,10 @@ class Canvas(gym.Env):
         self.action_space = spaces.Dict({
             'y': spaces.Discrete(self.target_image_h),
             'x': spaces.Discrete(self.target_image_w),
-            'emoji': spaces.Discrete(self.num_available_emojis),
-            'scale': spaces.Box(low=1, high=5, shape=(1,), dtype=np.float32),
+            'r': spaces.Discrete(256),
+            'g': spaces.Discrete(256),
+            'b': spaces.Discrete(256),
+            'scale': spaces.Discrete(1000),
             'rotation': spaces.Discrete(360)
         })
 
@@ -103,7 +105,7 @@ class Canvas(gym.Env):
         coordinate = (action['x'], action['y'])
         scale = action['scale']
         cur_size = selected_emoji.size
-        scaled_size = (cur_size[0] / scale, cur_size[1] / scale)
+        scaled_size = (int(cur_size[0] / scale), int(cur_size[1] / scale))
         selected_emoji = selected_emoji.resize(scaled_size)
         selected_emoji = selected_emoji.rotate(action['rotation'], expand=1)
 
@@ -126,7 +128,6 @@ class Canvas(gym.Env):
 
         # construct diagnositic info dict
         info = {
-            'selected_emoji': action['emoji'],
             'position': (action['x'], action['y']),
             'emoji_count': self.emoji_count,
             'mssim': self.similarity,
