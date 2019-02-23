@@ -1,6 +1,5 @@
 from pablo.envs import Canvas
 
-c = Canvas('pablo.png')
 
 class Agent():
     
