@@ -118,7 +118,8 @@ class Canvas(gym.Env):
         }
 
         # TODO: calculate reward
-        new_similarity = self._calculate_mssim()
+        # new_similarity = self._calculate_mssim()
+        new_similarity = 0
         reward = new_similarity - self.similarity
         self.similarity = new_similarity
 
