@@ -101,7 +101,7 @@ class Canvas(gym.Env):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
 
         # Place emoji as described by the action
-        selected_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, action['emoji']))
+        selected_emoji = self._find_nearest_emoji(action['r'], action['g'], action['b'])
         coordinate = (action['x'], action['y'])
         scale = action['scale']
         cur_size = selected_emoji.size
@@ -124,7 +124,7 @@ class Canvas(gym.Env):
 
         # increment emoji count and set done flag
         self.emoji_count += 1
-        done = (self.emoji_count >= self.max_emojis) or (self.similarity < self.similarity_threshold)
+        done = (self.emoji_count >= self.max_emojis) # or (self.similarity < self.similarity_threshold)
 
         # construct diagnositic info dict
         info = {
@@ -257,5 +257,7 @@ class Canvas(gym.Env):
         Returns:
             Image: The closest emoji
         """
-        return self.emoji_KDT.query([r, g, b])
+        dist, emoji_index = self.emoji_KDT.query([r, g, b])
+        closest_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, emoji_index))
+        return closest_emoji
 
