@@ -1,0 +1,1 @@
+18/02: 3 minutes per image on average, for 100k iterations

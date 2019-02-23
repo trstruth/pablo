@@ -1,6 +1,6 @@
 # coding: utf-8
 
-"""A module for the Canvas where the image where be created
+"""A module for the Canvas where the image will be created
 
 analogous to the environment in a reinforcement learning problem - accepts actions,
 performs transformations to the images stored as members, thus updating the environment
@@ -15,6 +15,7 @@ import gym
 from PIL import Image
 from gym import spaces, logger
 from numpy import linalg as LA
+from scipy.spatial import KDTree
 from skimage.measure import compare_ssim
 
 class Canvas(gym.Env):
@@ -38,6 +39,8 @@ class Canvas(gym.Env):
         self.similarity = None
         self.similarity_threshold = 0.1
 
+        self.emoji_KDT = self._construct_emoji_KDTree()
+
         self.viewer = None
         self._load_target_image_from_file(self.target_image_filename)
         self.reset()
@@ -46,8 +49,10 @@ class Canvas(gym.Env):
         self.action_space = spaces.Dict({
             'y': spaces.Discrete(self.target_image_h),
             'x': spaces.Discrete(self.target_image_w),
-            'emoji': spaces.Discrete(self.num_available_emojis),
-            'scale': spaces.Box(low=1, high=5, shape=(1,), dtype=np.float32),
+            'r': spaces.Discrete(256),
+            'g': spaces.Discrete(256),
+            'b': spaces.Discrete(256),
+            'scale': spaces.Discrete(1000),
             'rotation': spaces.Discrete(360)
         })
 
@@ -96,11 +101,11 @@ class Canvas(gym.Env):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
 
         # Place emoji as described by the action
-        selected_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, action['emoji']))
+        selected_emoji = self._find_nearest_emoji(action['r'], action['g'], action['b'])
         coordinate = (action['x'], action['y'])
         scale = action['scale']
         cur_size = selected_emoji.size
-        scaled_size = (cur_size[0] / scale, cur_size[1] / scale)
+        scaled_size = (int(cur_size[0] / scale), int(cur_size[1] / scale))
         selected_emoji = selected_emoji.resize(scaled_size)
         selected_emoji = selected_emoji.rotate(action['rotation'], expand=1)
 
@@ -113,17 +118,17 @@ class Canvas(gym.Env):
         }
 
         # TODO: calculate reward
-        new_similarity = self._calculate_mssim()
+        # new_similarity = self._calculate_mssim()
+        new_similarity = 0
         reward = new_similarity - self.similarity
         self.similarity = new_similarity
 
         # increment emoji count and set done flag
         self.emoji_count += 1
-        done = (self.emoji_count >= self.max_emojis) or (self.similarity < self.similarity_threshold)
+        done = (self.emoji_count >= self.max_emojis) # or (self.similarity < self.similarity_threshold)
 
-        # construct diagnoistic info dict
+        # construct diagnositic info dict
         info = {
-            'selected_emoji': action['emoji'],
             'position': (action['x'], action['y']),
             'emoji_count': self.emoji_count,
             'mssim': self.similarity,
@@ -189,7 +194,7 @@ class Canvas(gym.Env):
         """ Calculate the mean structural similarity between self.target_image and self.generated_image
 
         Returns:
-            Float: The mean structural similarity over the image.
+            Float: The mean structural similarity over the image
         """
         assert self.target_image.size == self.generated_image.size
         thumb_size = (128, 128)
@@ -201,4 +206,59 @@ class Canvas(gym.Env):
         return compare_ssim(np.array(target_thumb), np.array(generated_thumb), multichannel=True)
         
 
+    def _construct_emoji_KDTree(self):
+        """ The rgb color space can be visualized in 3 dimensions, with
+        the intensity of each color along each dim.  We can achieve
+        logarithmic lookup performance by indexing each emoji in a KDTree.
+        This method constructs such a tree.  We iterate through each of
+        the emojis, construct a list of those values, then use them to 
+        construct a KDTree.
+
+        Returns:
+            KDTree: The KDTree indexing each of the emojis
+        """
+        avg_rgb_list = np.zeros((self.num_available_emojis, 3))
+
+        for i in range(self.num_available_emojis):
+            emoji = Image.open('{}/{}.png'.format(self.emoji_directory, i))
+            average_rgb = self._get_average_rgb(emoji)
+            avg_rgb_list[i, :] = average_rgb   
+
+        return KDTree(avg_rgb_list)
+
+
+    def _get_average_rgb(self, image):
+        """ Calculate the average rgb values given an image.  Ignore pixels
+        that have a 0 alpha value
+
+        Args:
+            image (Image): the input image
+
+        Returns:
+            np.array: Array with [r, g, b] values
+        """
+        im = np.array(image)
+        h, w, d = im.shape
+        im_vector = im.reshape((h*w, d))
+
+        im_mask = im_vector[:,3] != 0
+        average_rgb = np.average(im_vector, axis=0, weights=im_mask)[:3]
+
+        return average_rgb
+
+
+    def _find_nearest_emoji(self, r, g, b):
+        """Find and return the emoji with average rgb values closest to supplied rgb
+        
+        Args:
+            r (int): The red component
+            g (int): The green component
+            b (int): The blue component
+
+        Returns:
+            Image: The closest emoji
+        """
+        dist, emoji_index = self.emoji_KDT.query([r, g, b])
+        closest_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, emoji_index))
+        return closest_emoji
 

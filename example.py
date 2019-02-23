@@ -4,7 +4,7 @@ for i_episode in range(5):
     observation = env.reset()
     info = {}
     for t in range(500):
-        print info
+        print(info)
         env.render()
         action = env.action_space.sample()
         observation, reward, done, info = env.step(action)
