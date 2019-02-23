@@ -39,6 +39,8 @@ class Canvas(gym.Env):
         self.similarity = None
         self.similarity_threshold = 0.1
 
+        self.emoji_KDT = self._construct_emoji_KDTree()
+
         self.viewer = None
         self._load_target_image_from_file(self.target_image_filename)
         self.reset()
@@ -190,7 +192,7 @@ class Canvas(gym.Env):
         """ Calculate the mean structural similarity between self.target_image and self.generated_image
 
         Returns:
-            Float: The mean structural similarity over the image.
+            Float: The mean structural similarity over the image
         """
         assert self.target_image.size == self.generated_image.size
         thumb_size = (128, 128)
@@ -203,18 +205,36 @@ class Canvas(gym.Env):
         
 
     def _construct_emoji_KDTree(self):
-        avg_rgb_list = np.zeros((self.num_available_emojis, 4))
+        """ The rgb color space can be visualized in 3 dimensions, with
+        the intensity of each color along each dim.  We can achieve
+        logarithmic lookup performance by indexing each emoji in a KDTree.
+        This method constructs such a tree.  We iterate through each of
+        the emojis, construct a list of those values, then use them to 
+        construct a KDTree.
+
+        Returns:
+            KDTree: The KDTree indexing each of the emojis
+        """
+        avg_rgb_list = np.zeros((self.num_available_emojis, 3))
 
         for i in range(self.num_available_emojis):
             emoji = Image.open('{}/{}.png'.format(self.emoji_directory, i))
-            average_rgb = np.array(self._get_average_rgb(emoji))
+            average_rgb = self._get_average_rgb(emoji)
             avg_rgb_list[i, :] = average_rgb   
 
         return KDTree(avg_rgb_list)
 
 
     def _get_average_rgb(self, image):
-        """Given PIL Image, return its Average RGB value."""
+        """ Calculate the average rgb values given an image.  Ignore pixels
+        that have a 0 alpha value
+
+        Args:
+            image (Image): the input image
+
+        Returns:
+            np.array: Array with [r, g, b] values
+        """
         im = np.array(image)
         h, w, d = im.shape
         im_vector = im.reshape((h*w, d))
@@ -234,6 +254,7 @@ class Canvas(gym.Env):
             b (int): The blue component
 
         Returns:
-            
+            Image: The closest emoji
         """
+        return self.emoji_KDT.query([r, g, b])
 
