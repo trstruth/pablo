@@ -8,7 +8,7 @@ class Naive(Agent):
 
     def __init__(self,
                  target_image_filename='pablo.jpg',
-                 iters=30000,
+                 iters=100000,
                  emoji_size=25):
 
         super().__init__(target_image_filename=target_image_filename)
@@ -31,7 +31,7 @@ class Naive(Agent):
                 'r': r,
                 'g': g,
                 'b': b,
-                'scale': 25,
+                'scale': self.emoji_size,
                 'rotation': 0
             }
 
