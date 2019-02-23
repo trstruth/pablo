@@ -1,4 +1,9 @@
+import cProfile
+
 from pablo.agents.naive.naive_agent import Naive
 
 n = Naive()
-n.run()
+
+cProfile.run('n.run()', sort='cumtime')
+# n.run()
+
