@@ -7,11 +7,11 @@ import numpy as np
 class NaiveAgent(Agent):
 
     def __init__(self,
-                 target_image_filename='pablo.jpg',
+                 target_image_filename,
                  iters=100000,
                  emoji_size=25):
 
-        super().__init__(target_image_filename=target_image_filename)
+        super().__init__(target_image_filename)
 
         #setup vars
         self.iters = iters
@@ -36,8 +36,6 @@ class NaiveAgent(Agent):
             }
 
             self.canvas.step(selected_action)
-
-        self.canvas._write_generated_image_to_file('tristan_first.png')
     
     def _sampler(self, image):
         """Picks out points on image."""

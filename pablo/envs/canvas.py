@@ -26,7 +26,7 @@ class Canvas(gym.Env):
     }
 
     def __init__(self,
-                 target_image_filename='pablo.png',
+                 target_image_filename,
                  images_directory=os.path.abspath(os.path.join(__file__,'../../../','images/'))):
 
         self.target_image_filename = target_image_filename
