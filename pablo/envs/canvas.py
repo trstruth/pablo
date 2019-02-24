@@ -108,7 +108,7 @@ class Canvas(gym.Env):
         scale = action['scale']
         cur_size = selected_emoji.size
         scaled_size = (int(cur_size[0] / scale), int(cur_size[1] / scale))
-        selected_emoji = selected_emoji.resize(scaled_size)
+        selected_emoji = selected_emoji.resize(scaled_size, Image.ANTIALIAS)
         selected_emoji = selected_emoji.rotate(action['rotation'], expand=1)
 
         self.generated_image.paste(selected_emoji, coordinate, selected_emoji)
