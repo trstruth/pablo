@@ -115,8 +115,8 @@ class Canvas(gym.Env):
 
         # construct the observation object
         observation = {
-            'target': np.array(self.target_image.convert('RGB')),
-            'generated': np.array(self.generated_image.convert('RGB'))
+            'target': self.target_image,
+            'generated': self.generated_image
         }
 
         # TODO: calculate reward
