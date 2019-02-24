@@ -40,6 +40,7 @@ class Canvas(gym.Env):
         self.similarity_threshold = 0.1
 
         self.emoji_KDT = self._construct_emoji_KDTree()
+        self.emoji_cache = self._construct_emoji_cache()
 
         self.viewer = None
         self._load_target_image_from_file(self.target_image_filename)
@@ -101,7 +102,8 @@ class Canvas(gym.Env):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
 
         # Place emoji as described by the action
-        selected_emoji = self._find_nearest_emoji(action['r'], action['g'], action['b'])
+        index = self._find_nearest_emoji_index(action['r'], action['g'], action['b'])
+        selected_emoji = self._get_emoji(index)
         coordinate = (action['x'], action['y'])
         scale = action['scale']
         cur_size = selected_emoji.size
@@ -113,8 +115,8 @@ class Canvas(gym.Env):
 
         # construct the observation object
         observation = {
-            'target': np.array(self.target_image.convert('RGB')),
-            'generated': np.array(self.generated_image.convert('RGB'))
+            'target': self.target_image,
+            'generated': self.generated_image
         }
 
         # TODO: calculate reward
@@ -163,7 +165,7 @@ class Canvas(gym.Env):
         """
         target_image_filepath = os.path.join(self.images_directory, filename)
         try:
-            self.target_image = Image.open(target_image_filepath)
+            self.target_image = Image.open(target_image_filepath).convert('RGB')
         except IOError:
             print('There was an error opening the file {}'.format(target_image_filepath))
 
@@ -225,6 +227,15 @@ class Canvas(gym.Env):
             avg_rgb_list[i, :] = average_rgb   
 
         return KDTree(avg_rgb_list)
+    
+
+    def _construct_emoji_cache(self):
+        """ Instead of loading each emoji from disk each time, on first load
+        we cache the emoji in a dictionary.  On each lookup, we first check
+        to see if the emoji is loaded in the cache, and if so we can retrieve
+        it from memory as opposed to disk
+        """
+        return {i: None for i in range(self.num_available_emojis)}
 
 
     def _get_average_rgb(self, image):
@@ -247,7 +258,7 @@ class Canvas(gym.Env):
         return average_rgb
 
 
-    def _find_nearest_emoji(self, r, g, b):
+    def _find_nearest_emoji_index(self, r, g, b):
         """Find and return the emoji with average rgb values closest to supplied rgb
         
         Args:
@@ -256,9 +267,26 @@ class Canvas(gym.Env):
             b (int): The blue component
 
         Returns:
-            Image: The closest emoji
+            int: the index of the nearest emoji
         """
         dist, emoji_index = self.emoji_KDT.query([r, g, b])
-        closest_emoji = Image.open('{}/{}.png'.format(self.emoji_directory, emoji_index))
-        return closest_emoji
+        return emoji_index
+
+    def _get_emoji(self, index):
+        """ Return the emoji that corresponds with the given index.
+        Check cache for the emoji first.  If it doesnt exist, make a record of it
+        otherwise, return the emoji in the cache.
+
+        Args:
+            index (int): The index of the desired emoji
+
+        Returns:
+            Image: the Image object that represents the emoji
+        """
+        if self.emoji_cache[index] is None:
+            image = Image.open('{}/{}.png'.format(self.emoji_directory, index)) 
+            self.emoji_cache[index] = image
+            return image
+        else:
+            return self.emoji_cache[index]
 

@@ -21,7 +21,7 @@ class Naive(Agent):
         
         for i in tqdm(range(self.iters)):
             location = self._sampler(self.canvas.target_image)
-            pixel = self.canvas.target_image.convert('RGB').getpixel(location) #[:3]
+            pixel = self.canvas.target_image.getpixel(location)
             x, y = location
             r, g, b = pixel
             
