@@ -165,7 +165,7 @@ class Canvas(gym.Env):
         """
         target_image_filepath = os.path.join(self.images_directory, filename)
         try:
-            self.target_image = Image.open(target_image_filepath)
+            self.target_image = Image.open(target_image_filepath).convert('RGB')
         except IOError:
             print('There was an error opening the file {}'.format(target_image_filepath))
 
