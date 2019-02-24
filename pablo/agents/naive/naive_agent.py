@@ -1,10 +1,10 @@
-from pablo import Agent
+from pablo.agents import Agent
 from tqdm import tqdm
 from gym.spaces import dict_space
 import random
 import numpy as np
 
-class Naive(Agent):
+class NaiveAgent(Agent):
 
     def __init__(self,
                  target_image_filename='pablo.jpg',
