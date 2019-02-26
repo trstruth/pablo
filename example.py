@@ -1,7 +1,7 @@
 import cProfile
 from pablo.agents import NaiveAgent
 
-n = NaiveAgent('pablo.png', iters=300000)
+n = NaiveAgent('pablo.png', iters=300000, emoji_size=15)
 
 n.run()
 # cProfile.run('n.run()', sort='cumtime')

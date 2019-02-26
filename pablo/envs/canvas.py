@@ -78,8 +78,8 @@ class Canvas(gym.Env):
         self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
         self.similarity = self._calculate_mssim()
         return {
-            'target': np.array(self.target_image.convert('RGB')),
-            'generated': np.array(self.generated_image.convert('RGB'))
+            'target': self.target_image,
+            'generated': self.generated_image
         }
 
 
@@ -108,7 +108,7 @@ class Canvas(gym.Env):
         scale = action['scale']
         cur_size = selected_emoji.size
         scaled_size = (int(cur_size[0] / scale), int(cur_size[1] / scale))
-        selected_emoji = selected_emoji.resize(scaled_size)
+        selected_emoji = selected_emoji.resize(scaled_size, Image.ANTIALIAS)
         selected_emoji = selected_emoji.rotate(action['rotation'], expand=1)
 
         self.generated_image.paste(selected_emoji, coordinate, selected_emoji)
@@ -168,6 +168,7 @@ class Canvas(gym.Env):
             self.target_image = Image.open(target_image_filepath).convert('RGB')
         except IOError:
             print('There was an error opening the file {}'.format(target_image_filepath))
+            self.target_image = None
 
 
     def _write_generated_image_to_file(self, filename):
