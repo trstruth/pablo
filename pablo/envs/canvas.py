@@ -38,8 +38,10 @@ class Canvas(gym.Env):
         self.max_emojis = 300
         self.similarity = None
         self.similarity_threshold = 0.1
+
+        # These values control the quality of the output image
+        self.min_dim = 4000
         self.image_res_ratio = 1
-        self.max_dim = 7500
 
         self.emoji_KDT = self._construct_emoji_KDTree()
         self.emoji_cache = self._construct_emoji_cache()
@@ -191,7 +193,7 @@ class Canvas(gym.Env):
         assert self.target_image is not None
 
         # divide 5000 by each dim, store ratios in scale_ratios
-        scale_ratios = [self.max_dim/dim for dim in self.target_image.size]
+        scale_ratios = [self.min_dim/dim for dim in self.target_image.size]
         # the min(width, height) will create the larger res ratio
         self.image_res_ratio = max(scale_ratios)
 
