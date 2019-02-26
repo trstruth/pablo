@@ -38,6 +38,8 @@ class Canvas(gym.Env):
         self.max_emojis = 300
         self.similarity = None
         self.similarity_threshold = 0.1
+        self.image_res_ratio = 1
+        self.max_dim = 7500
 
         self.emoji_KDT = self._construct_emoji_KDTree()
         self.emoji_cache = self._construct_emoji_cache()
@@ -74,9 +76,10 @@ class Canvas(gym.Env):
         self.observation_space
         """
         assert self.target_image is not None
+
         self.emoji_count = 0
-        self.generated_image = Image.new('RGBA', self.target_image.size, (255, 255, 255))
-        self.similarity = self._calculate_mssim()
+        self._init_generated_image()
+        self.similarity = 0
         return {
             'target': self.target_image,
             'generated': self.generated_image
@@ -101,10 +104,14 @@ class Canvas(gym.Env):
         """
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
 
-        # Place emoji as described by the action
         index = self._find_nearest_emoji_index(action['r'], action['g'], action['b'])
         selected_emoji = self._get_emoji(index)
-        coordinate = (action['x'], action['y'])
+
+        # Place emoji as described by the action
+        coordinate = (
+            int(action['x']*self.image_res_ratio),
+            int(action['y']*self.image_res_ratio)
+        )
         scale = action['scale']
         cur_size = selected_emoji.size
         scaled_size = (int(cur_size[0] / scale), int(cur_size[1] / scale))
@@ -171,6 +178,27 @@ class Canvas(gym.Env):
             self.target_image = None
 
 
+    def _init_generated_image(self):
+        """Initialize the generated image
+        in order to avoid unnecessary downsampling of the emojis, we create a high resolution canvas
+        to paste them on.  The aspect ratio of of the generated image should be the same as that of
+        the target image. For the generated image, the min(width, height) should equal some parameter
+        set for the canvas.
+
+        Returns:
+            None
+        """
+        assert self.target_image is not None
+
+        # divide 5000 by each dim, store ratios in scale_ratios
+        scale_ratios = [self.max_dim/dim for dim in self.target_image.size]
+        # the min(width, height) will create the larger res ratio
+        self.image_res_ratio = max(scale_ratios)
+
+        scaled_size = tuple([int(self.image_res_ratio*dim) for dim in self.target_image.size])
+        self.generated_image = Image.new('RGBA', scaled_size, (255, 255, 255))
+
+
     def _write_generated_image_to_file(self, filename):
         """Write self.generated_image to <filename>
         
@@ -181,7 +209,7 @@ class Canvas(gym.Env):
             None
         """
         generated_image_filepath = os.path.join(self.images_directory, filename)
-        self.generated_image.save(generated_image_filepath)
+        self.generated_image.save(generated_image_filepath, quality=95)
 
 
     def _calculate_error(self):
