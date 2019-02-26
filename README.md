@@ -2,7 +2,7 @@
 
 Target | Generated
 --- | ---
-![basq_before](images/basquiat_skull.jpg) | ![basq_after](images/basquiat_skull-100k@15.png)
+![basq_before](images/basquiat_skull.jpg) | ![basq_after](images/basquiat_skull_generated.png)
 
 An artistic deep reinforcement learning experiment that tries to teach an AI to "draw".
 
