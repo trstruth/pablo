@@ -2,7 +2,8 @@
 
 Target | Generated
 --- | ---
-![basq_before](images/basquiat_skull.jpg) | ![basq_after](images/basquiat_skull_generated.png)
+<img src="images/basquiat_skull.jpg" alt="basq_before" width="921"/> | <img src="images/basquiat_skull_generated.png" alt="basq_before" width="921"/>
+
 
 An artistic deep reinforcement learning experiment that tries to teach an AI to "draw".
 
