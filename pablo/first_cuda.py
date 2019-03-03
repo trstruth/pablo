@@ -8,7 +8,7 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from PIL import Image
 from torchvision.datasets import MNIST
-from time import time()
+from time import time
 
 
 class Autoencoder(nn.Module):
@@ -83,7 +83,7 @@ transform = transforms.Compose([
 dataset = Emojis(transforms=transform)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-model = Autoencoder()
+model = Autoencoder().to(device)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
 
@@ -92,8 +92,9 @@ total_steps = len(dataloader)
 for epoch in range(num_epochs): 
     begin=time()
     for i, data in enumerate(dataloader):
-        
+        data = data.to(device)
         output = model(data)
+        
         loss = criterion(output, data)
         
         optimizer.zero_grad()
