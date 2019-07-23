@@ -1,6 +1,5 @@
 from pablo.agents import Agent
 from tqdm import tqdm
-from gym.spaces import dict_space
 import random
 import numpy as np
 
